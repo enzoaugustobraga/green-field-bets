@@ -1,0 +1,54 @@
+# Arquivo: .github/workflows/deploy.yml
+
+name: Deploy Vite Site to GitHub Pages
+
+on:
+  # Roda quando você faz push para a branch 'main'
+  push:
+    branches: [ "main" ] # Mude para 'master' se for o seu caso
+
+  # Permite que você rode manualmente pela aba Actions
+  workflow_dispatch:
+
+# Permissões para o job poder publicar no GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Baixa o seu código do repositório
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configura o Bun (porque você tem bun.lockb)
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest 
+
+      # 3. Instala as dependências
+      - name: Install dependencies
+        run: bun install
+
+      # 4. "Constrói" o site (cria a pasta 'dist')
+      - name: Build project
+        run: bun run build # Este comando lê seu package.json e roda o script 'build'
+
+      # 5. Configura o GitHub Pages para receber os arquivos
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      # 6. Faz o upload da pasta 'dist' como um artefato
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist' # A pasta que o 'bun run build' criou
+
+      # 7. Publica o artefato no GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
